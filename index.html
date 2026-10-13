@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daylist — a calm place for your to-dos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f4ef;
+    --card:#ffffff;
+    --ink:#2b2a27;
+    --muted:#8b877e;
+    --accent:#5b7a63;
+    --accent-soft:#e6ede7;
+    --line:#e9e5dd;
+    --done:#b7b2a8;
+    --shadow:0 10px 30px rgba(40,38,32,.08);
+    --radius:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;line-height:1.2;}
+
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px;}
+
+  /* HERO */
+  header.hero{
+    text-align:center;
+    padding:64px 20px 36px;
+  }
+  .hero .eyebrow{
+    text-transform:uppercase;
+    letter-spacing:.18em;
+    font-size:.72rem;
+    font-weight:600;
+    color:var(--accent);
+    margin-bottom:14px;
+  }
+  .hero h1{font-size:clamp(2.2rem,6vw,3.4rem);margin-bottom:14px;}
+  .hero p{color:var(--muted);max-width:460px;margin:0 auto;font-size:1.05rem;}
+  .savebadge{
+    display:inline-flex;align-items:center;gap:7px;
+    margin-top:18px;font-size:.8rem;color:var(--muted);
+    opacity:0;transition:opacity .3s;
+  }
+  .savebadge.show{opacity:1;}
+  .savebadge .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
+
+  /* COMPOSE */
+  .compose{
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:10px;
+    display:flex;
+    gap:8px;
+    align-items:center;
+    margin-bottom:24px;
+  }
+  .compose input[type=text]{
+    flex:1;
+    border:none;
+    outline:none;
+    font-family:inherit;
+    font-size:1.02rem;
+    padding:12px 14px;
+    background:transparent;
+    color:var(--ink);
+    min-width:0;
+  }
+  .compose input::placeholder{color:#b4afa5;}
+  .addbtn{
+    border:none;
+    background:var(--accent);
+    color:#fff;
+    font-family:inherit;
+    font-weight:600;
+    font-size:.95rem;
+    padding:0 20px;
+    height:46px;
+    border-radius:12px;
+    cursor:pointer;
+    transition:transform .12s, background .2s;
+    white-space:nowrap;
+  }
+  .addbtn:hover{background:#4c6b54;transform:translateY(-1px);}
+  .addbtn:active{transform:translateY(0);}
+
+  /* FILTERS */
+  .bar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .filters{display:flex;gap:6px;background:var(--card);padding:5px;border-radius:12px;box-shadow:var(--shadow);}
+  .filters button{
+    border:none;background:transparent;font-family:inherit;
+    font-size:.86rem;font-weight:500;color:var(--muted);
+    padding:7px 14px;border-radius:9px;cursor:pointer;transition:.15s;
+    min-height:36px;
+  }
+  .filters button.active{background:var(--accent-soft);color:var(--accent);}
+  .clearbtn{
+    border:none;background:transparent;color:var(--muted);
+    font-family:inherit;font-size:.82rem;cursor:pointer;
+    text-decoration:underline;text-underline-offset:3px;padding:8px;
+  }
+  .clearbtn:hover{color:#b5524a;}
+
+  /* LIST */
+  ul.list{list-style:none;display:flex;flex-direction:column;gap:10px;}
+  li.item{
+    background:var(--card);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    padding:16px 16px;
+    animation:rise .25s ease;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .check{
+    flex-shrink:0;
+    width:24px;height:24px;margin-top:2px;
+    border:2px solid var(--line);
+    border-radius:50%;
+    cursor:pointer;
+    display:grid;place-items:center;
+    transition:.18s;
+    background:#fff;
+  }
+  .check:hover{border-color:var(--accent);}
+  .check.done{background:var(--accent);border-color:var(--accent);}
+  .check.done::after{content:"✓";color:#fff;font-size:.8rem;font-weight:700;}
+  .item-body{flex:1;min-width:0;}
+  .item-text{
+    font-size:1.02rem;
+    word-break:break-word;
+    cursor:text;
+  }
+  .item.completed .item-text{color:var(--done);text-decoration:line-through;}
+  .item-meta{font-size:.74rem;color:#b4afa5;margin-top:3px;}
+  .del{
+    flex-shrink:0;
+    border:none;background:transparent;cursor:pointer;
+    color:#cfc9bf;font-size:1.25rem;line-height:1;padding:4px 6px;
+    border-radius:8px;transition:.15s;
+  }
+  .del:hover{color:#b5524a;background:#f7efed;}
+
+  .empty{
+    text-align:center;padding:48px 20px;color:var(--muted);
+  }
+  .empty .em{font-size:2.4rem;display:block;margin-bottom:10px;}
+
+  .counts{text-align:center;color:var(--muted);font-size:.85rem;margin-top:22px;}
+
+  /* pay */
+  .sell{margin:48px 0 0;}
+  .sell h2{font-size:1.5rem;text-align:center;margin-bottom:6px;}
+  .sell p.sub{text-align:center;color:var(--muted);margin-bottom:20px;}
+  [data-factory-pay]{
+    background:var(--card);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:6px;
+  }
+  .factory-pay-item{display:flex;align-items:center;gap:14px;padding:16px;border-bottom:1px solid var(--line);}
+  .factory-pay-item:last-child{border-bottom:none;}
+  .factory-pay-name{font-weight:600;flex:1;}
+  .factory-pay-price{color:var(--accent);font-weight:600;}
+  .factory-pay-btn{
+    border:none;background:var(--accent);color:#fff;font-family:inherit;
+    font-weight:600;padding:10px 18px;border-radius:10px;cursor:pointer;min-height:44px;
+  }
+  .factory-pay-btn:hover{background:#4c6b54;}
+
+  /* how */
+  .how{
+    background:var(--accent-soft);
+    border-radius:var(--radius);
+    padding:28px 26px;
+    margin:44px 0 60px;
+  }
+  .how h2{font-size:1.3rem;margin-bottom:12px;color:var(--accent);}
+  .how ol{margin-left:18px;color:#4e5a51;}
+  .how li{margin-bottom:8px;}
+
+  footer{text-align:center;color:#b4afa5;font-size:.8rem;padding-bottom:40px;}
+
+  @media(min-width:720px){
+    .hero{padding-top:88px;}
+  }
+</style>
+<script id="factory-store-sdk">
+window.factory=(function(){
+var K="212483b3-baa0-4465-9a2a-16e4c33e6ceb",U="https://canvbkibjgcnqowjtarf.supabase.co/functions/v1/app-market",A="sb_publishable_sMTQKIeFgT1vwjHnU7Gexg_8CCmhtxs";
+function call(b){b.appKey=K;return fetch(U,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+A},body:JSON.stringify(b)}).then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error||("store "+r.status));return d;});});}
+var S={
+put:function(c,i,d){return call({op:"put",collection:c,id:String(i),data:d}).then(function(x){return x.doc?x.doc.data:null;});},
+get:function(c,i){return call({op:"get",collection:c,id:String(i)}).then(function(x){return x.doc?x.doc.data:null;});},
+list:function(c){return call({op:"list",collection:c}).then(function(x){return x.docs.map(function(d){return d.data;});});},
+remove:function(c,i){return call({op:"delete",collection:c,id:String(i)}).then(function(){return true;});},
+unlock:function(code){return call({op:"redeem",code:String(code)}).then(function(x){try{localStorage.setItem("factory_access",x.status);}catch(e){}return x.status;});},
+access:function(){try{return localStorage.getItem("factory_access")||"none";}catch(e){return "none";}}
+};
+var _c=null;try{var h=(location.hash||"").match(/factory_code=([a-z0-9-]+)/i);_c=h?h[1]:localStorage.getItem("factory_code");if(h){history.replaceState(null,"",location.pathname+location.search);}}catch(e){}
+var F={put:S.put,get:S.get,list:S.list,remove:S.remove,unlock:S.unlock,access:S.access};
+F.ready=_c?S.unlock(_c).then(function(s){try{if(s!=="invalid")localStorage.setItem("factory_code",_c);}catch(e){}return s;}).catch(function(){return S.access();}):Promise.resolve(S.access());
+return F;})();
+</script>
+<script id="factory-pay-sdk">
+(function(){var s=document.createElement("script");s.src="https://canvbkibjgcnqowjtarf.supabase.co/functions/v1/app-pay?sdk=1&repo=make-a-todo-pg3n&v="+Math.floor(Date.now()/300000);s.async=true;document.head.appendChild(s);})();
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">Daylist</div>
+  <h1>A calm place for your to-dos</h1>
+  <p>Jot it down, tick it off, let it go. Everything you add is kept safely and waiting for you whenever you come back.</p>
+  <div class="savebadge" id="savebadge"><span class="dot"></span><span id="savetext">Saved</span></div>
+</header>
+
+<main class="wrap">
+
+  <form class="compose" id="composeForm">
+    <label for="newTask" style="position:absolute;left:-9999px;">New task</label>
+    <input type="text" id="newTask" placeholder="What would you like to get done?" autocomplete="off">
+    <button type="submit" class="addbtn">Add</button>
+  </form>
+
+  <div class="bar">
+    <div class="filters" role="group" aria-label="Filter tasks">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="active">Active</button>
+      <button data-filter="done">Done</button>
+    </div>
+    <button class="clearbtn" id="clearDone">Clear completed</button>
+  </div>
+
+  <ul class="list" id="list" aria-live="polite"></ul>
+
+  <div class="counts" id="counts"></div>
+
+  <section class="sell">
+    <h2>Keep going further</h2>
+    <p class="sub">Tools and treats to support your focus.</p>
+    <div data-factory-pay></div>
+  </section>
+
+  <section class="how">
+    <h2>How it works</h2>
+    <ol>
+      <li>Type a task and press <strong>Add</strong> (or hit Enter).</li>
+      <li>Tap the circle to mark something done — tap again to undo.</li>
+      <li>Click a task's text to edit it; use the <strong>×</strong> to remove it.</li>
+      <li>Filter by <strong>All</strong>, <strong>Active</strong> or <strong>Done</strong>, and tidy up with <strong>Clear completed</strong>.</li>
+      <li>Your list is saved to the cloud automatically, so it's there on every visit and every device.</li>
+    </ol>
+  </section>
+
+</main>
+
+<footer>Made with care · Your list is kept private and saved automatically</footer>
+
+<script>
+  // ---- Fallback store so the app works before publish wiring ----
+  const store = (window.factory && factory.list) ? factory : (function(){
+    const key = "daylist_fallback";
+    const read = ()=>JSON.parse(localStorage.getItem(key)||"{}");
+    const write = o=>localStorage.setItem(key,JSON.stringify(o));
+    return {
+      async list(c){const o=read()[c]||{};return Object.values(o).sort((a,b)=>b._id.localeCompare(a._id));},
+      async put(c,id,doc){const o=read();o[c]=o[c]||{};o[c][id]={...doc,_id:id};write(o);},
+      async remove(c,id){const o=read();if(o[c])delete o[c][id];write(o);},
+      async get(c,id){return (read()[c]||{})[id]||null;}
+    };
+  })();
+
+  const COL = "tasks";
+  let tasks = [];
+  let filter = "all";
+
+  const listEl = document.getElementById("list");
+  const countsEl = document.getElementById("counts");
+  const badge = document.getElementById("savebadge");
+  const saveText = document.getElementById("savetext");
+
+  function showBadge(txt){
+    saveText.textContent = txt;
+    badge.classList.add("show");
+    clearTimeout(showBadge._t);
+    showBadge._t = setTimeout(()=>badge.classList.remove("show"), 1400);
+  }
+
+  function fmtDate(id){
+    const d = new Date(Number(id));
+    if(isNaN(d)) return "";
+    return d.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  }
+
+  async function load(){
+    try{
+      tasks = await store.list(COL);
+    }catch(e){
+      tasks = [];
+    }
+    render();
+  }
+
+  async function addTask(text){
+    const id = String(Date.now());
+    const doc = {text, done:false, created:id, _id:id};
+    tasks.unshift(doc);
+    render();
+    showBadge("Saving…");
+    await store.put(COL, id, doc);
+    showBadge("Saved");
+  }
+
+  async function toggle(id){
+    const t = tasks.find(x=>x._id===id);
+    if(!t) return;
+    t.done = !t.done;
+    render();
+    showBadge("Saving…");
+    await store.put(COL, id, t);
+    showBadge("Saved");
+  }
+
+  async function edit(id, text){
+    const t = tasks.find(x=>x._id===id);
+    if(!t) return;
+    if(!text.trim()){ await removeTask(id); return; }
+    t.text = text.trim();
+    showBadge("Saving…");
+    await store.put(COL, id, t);
+    showBadge("Saved");
+    render();
+  }
+
+  async function removeTask(id){
+    tasks = tasks.filter(x=>x._id!==id);
+    render();
+    showBadge("Saving…");
+    await store.remove(COL, id);
+    showBadge("Saved");
+  }
+
+  async function clearCompleted(){
+    const done = tasks.filter(t=>t.done);
+    if(!done.length) return;
+    tasks = tasks.filter(t=>!t.done);
+    render();
+    showBadge("Saving…");
+    for(const t of done){ await store.remove(COL, t._id); }
+    showBadge("Saved");
+  }
+
+  function render(){
+    let view = tasks;
+    if(filter==="active") view = tasks.filter(t=>!t.done);
+    if(filter==="done") view = tasks.filter(t=>t.done);
+
+    listEl.innerHTML = "";
+
+    if(!view.length){
+      const em = {
+        all:["🌱","Nothing here yet — add your first task above."],
+        active:["☕","All caught up. Nothing active right now."],
+        done:["✨","No completed tasks yet. You've got this."]
+      }[filter];
+      const d = document.createElement("div");
+      d.className = "empty";
+      d.innerHTML = `<span class="em">${em[0]}</span>${em[1]}`;
+      listEl.appendChild(d);
+    } else {
+      view.forEach(t=>{
+        const li = document.createElement("li");
+        li.className = "item" + (t.done ? " completed":"");
+
+        const chk = document.createElement("div");
+        chk.className = "check" + (t.done?" done":"");
+        chk.setAttribute("role","checkbox");
+        chk.setAttribute("aria-checked", t.done ? "true":"false");
+        chk.setAttribute("tabindex","0");
+        chk.setAttribute("aria-label", t.done ? "Mark as not done":"Mark as done");
+        chk.addEventListener("click",()=>toggle(t._id));
+        chk.addEventListener("keydown",e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();toggle(t._id);}});
+
+        const body = document.createElement("div");
+        body.className = "item-body";
+        const txt = document.createElement("div");
+        txt.className = "item-text";
+        txt.textContent = t.text;
+        txt.title = "Click to edit";
+        txt.addEventListener("click",()=>startEdit(li, t));
+        const meta = document.createElement("div");
+        meta.className = "item-meta";
+        meta.textContent = "Added " + fmtDate(t.created||t._id);
+        body.appendChild(txt);
+        body.appendChild(meta);
+
+        const del = document.createElement("button");
+        del.className = "del";
+        del.innerHTML = "×";
+        del.setAttribute("aria-label","Delete task");
+        del.addEventListener("click",()=>removeTask(t._id));
+
+        li.appendChild(chk);
+        li.appendChild(body);
+        li.appendChild(del);
+        listEl.appendChild(li);
+      });
+    }
+
+    const remaining = tasks.filter(t=>!t.done).length;
+    const total = tasks.length;
+    countsEl.textContent = total ? `${remaining} of ${total} ${total===1?"task":"tasks"} to go` : "";
+  }
+
+  function startEdit(li, t){
+    const body = li.querySelector(".item-body");
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = t.text;
+    input.style.cssText = "width:100%;font-family:inherit;font-size:1.02rem;padding:6px 8px;border:1px solid var(--accent);border-radius:8px;outline:none;";
+    body.innerHTML = "";
+    body.appendChild(input);
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+    const commit = ()=>edit(t._id, input.value);
+    input.addEventListener("blur", commit);
+    input.addEventListener("keydown", e=>{
+      if(e.key==="Enter"){e.preventDefault();input.blur();}
+      if(e.key==="Escape"){input.removeEventListener("blur",commit);render();}
+    });
+  }
+
+  document.getElementById("composeForm").addEventListener("submit",e=>{
+    e.preventDefault();
+    const input = document.getElementById("newTask");
+    const v = input.value.trim();
+    if(!v) return;
+    addTask(v);
+    input.value = "";
+    input.focus();
+  });
+
+  document.querySelectorAll(".filters button").forEach(b=>{
+    b.addEventListener("click",()=>{
+      document.querySelectorAll(".filters button").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      filter = b.dataset.filter;
+      render();
+    });
+  });
+
+  document.getElementById("clearDone").addEventListener("click", clearCompleted);
+
+  load();
+</script>
+<div id="factory-provenance" style="padding:14px 16px;text-align:center;font:11px/1.7 system-ui,sans-serif;color:#888;opacity:.85;">&#9874; Built with <a href="https://thefactory.refereeinnovations.com" style="color:#888;">The Factory</a> using third-party AI tools &#183; the app owner is responsible for its content &#183; Standard: UK law, aligned with the UN Universal Declaration of Human Rights &#183; <a href="https://thefactory.refereeinnovations.com/terms.html" style="color:#888;">Terms</a></div>
+</body>
+</html>
